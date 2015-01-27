@@ -16,6 +16,7 @@
     #include <readline/readline.h>
     #include <readline/history.h>
 
+    #include "hash.h"
     #include "utils.h"
 
     #define INPUT_BUF_SIZE 2048
@@ -27,7 +28,9 @@
     extern FILE * yyin;
     extern int yylineno;
 
-    int sym[26];
+    int tsize=50;
+    hash_table_t *sym;
+
     char keep_alive = 1;
     char input[INPUT_BUF_SIZE];
     int rl_child_pid;
@@ -44,12 +47,13 @@
     char boolval;
     int intval;
     float floatval;
+    char * varval;
     int *int_arrayval;
 }
 
 %type <strval> STRING
 %type <strval> str_expr
-%type <intval> VARIABLE
+%type <varval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
 %type <int_arrayval> INT_ARRAY
@@ -81,11 +85,27 @@ statement:
                                     printf("}\n");
                                     free($1);
                                 }
-         | VARIABLE '=' expr    { sym[$1] = $3; }
+         | VARIABLE '=' expr    { //sym=create_hash_table(tsize);
+                                  add(sym,$1);
+                                  list_t *res;
+                                  res=lookup(sym,$1);
+                                  //if (!strcmp(res->str,$1))
+                                  //  print_debug("bangbang\n");
+                                  res->i=$3;
+                                  }
          ;
 expr:
            INTEGER                  { $$ = $1; }
-         | VARIABLE                 { $$ = sym[$1]; }
+         | VARIABLE                 { print_debug("%s\n",$1);
+                                      list_t *res;
+                                      res=lookup(sym,$1);
+                                      int i =0;
+                                      if (res==NULL)
+                                        print_debug("OHHHHH\n");
+                                      else {i=res->i;}
+                                      print_debug("yo\n");
+
+                                      $$ = i;}
          | expr '+' expr            { $$ = $1 + $3; }
          | expr '-' expr            { $$ = $1 - $3; }
          | expr '*' expr            { $$ = $1 * $3; }
@@ -479,6 +499,7 @@ int_array_expr:
     /* ================ END RULES ================ */
 
     /* ================ SUBROUTINES ============== */
+
 static void readline_sigint_handler() {
     // Exit gracefully when killed with SIGINT
     exit(SIGINT_EXIT_CODE);
@@ -579,6 +600,7 @@ void yyerror(char *s) {
 
 int main(int argc, char*argv[]) {
     signal(SIGINT, sighandler);
+    //sym=create_hash_table(tsize);
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (yyin == NULL) {

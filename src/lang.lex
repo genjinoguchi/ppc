@@ -18,9 +18,9 @@
     char *buf;
     size_t int_buf_size = 0;
     size_t int_buf_index = 0;
-    /* 
+    /*
      * NOTE: int arrays are delimited with their size (inclusive of the 0 index)
-     * at index 0 
+     * at index 0
      */
     int *int_buf;
 %}
@@ -28,7 +28,7 @@
     /* Parse state for control flow */
 %x CONTROL_STATE
     /* Parse state for strings */
-%x STRING_STATE 
+%x STRING_STATE
     /* Parse state for comments */
 %x COMMENT
     /* Parse state for integer arrays */
@@ -37,6 +37,7 @@
 INTEGER             (-)?[0-9]+
 BOOLEAN		    true|false
 WHITESPACE          [ \t]
+VARIABLE            [a-z]+
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
@@ -47,9 +48,9 @@ WHITESPACE          [ \t]
 "else"		return ELSE;
     /* ============================================*/
     /* ================ Variables ================ */
-[a-z]           {
+{VARIABLE}           {
 
-    yylval.intval = *yytext - 'a';
+    yylval.varval = yytext;
     return VARIABLE;
 
                 }
