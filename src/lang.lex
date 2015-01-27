@@ -47,14 +47,6 @@ VARIABLE            [a-z]+
 "if"		return IF;
 "else"		return ELSE;
     /* ============================================*/
-    /* ================ Variables ================ */
-{VARIABLE}           {
-
-    yylval.varval = yytext;
-    return VARIABLE;
-
-                }
-    /* =========================================== */
     /* ================ Booleans ================= */
 {BOOLEAN}		{
 
@@ -204,6 +196,15 @@ VARIABLE            [a-z]+
     /* Non-greedy regex */
 <COMMENT>(("*"[^/])?|[^*])*     ;
 <COMMENT>"*/"                   { BEGIN(INITIAL); }
+    /* =========================================== */
+    /* ================ Variables ================ */
+{VARIABLE}           {
+
+    yylval.varval = strdup(yytext);
+    printf("Got variable: %s\n", yytext);
+    return VARIABLE;
+
+                }
     /* =========================================== */
     /* ============= Ignore whitespace =========== */
 {WHITESPACE}           ;

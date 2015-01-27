@@ -47,7 +47,7 @@
     char boolval;
     int intval;
     float floatval;
-    char * varval;
+    char *varval;
     int *int_arrayval;
 }
 
@@ -70,7 +70,7 @@ program:
         ;
 
 statement:
-         | expr                 { printf("%d\n", $1); }
+         | expr                 { printf("resolving %d\n", $1); }
          | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
          | int_array_expr       {
@@ -86,26 +86,37 @@ statement:
                                     free($1);
                                 }
          | VARIABLE '=' expr    { //sym=create_hash_table(tsize);
-                                  add(sym,$1);
+                                  printf("Got variable named '%s'\n", $1);
+                                  printf("Got expr named '%d'\n", $3);
+                                  printf("Adding llist to symbol table...%d\n",
+                                    add(sym,$1));
                                   list_t *res;
                                   res=lookup(sym,$1);
                                   //if (!strcmp(res->str,$1))
                                   //  print_debug("bangbang\n");
                                   res->i=$3;
+                                  printf("!!Storing int '%s' is eq %d\n", $1, res->i);
+                                  res=lookup(sym,$1);
+                                  printf("Retrieving int %d\n", res->i);
+                                  free($1);
                                   }
          ;
 expr:
            INTEGER                  { $$ = $1; }
-         | VARIABLE                 { print_debug("%s\n",$1);
-                                      list_t *res;
-                                      res=lookup(sym,$1);
-                                      int i =0;
-                                      if (res==NULL)
-                                        print_debug("OHHHHH\n");
-                                      else {i=res->i;}
-                                      print_debug("yo\n");
+         | VARIABLE                 { 
+         
+        print_debug("Got var: %s\n",$1);
+        list_t *res;
+        res=lookup(sym,$1);
+        int i =0;
+        if (res==NULL)
+        print_debug("OHHHHH\n");
+        else {
+        $$=res->i;
+        print_debug("retrieved%d\n", $$);
+                                    }
 
-                                      $$ = i;}
+                                      }
          | expr '+' expr            { $$ = $1 + $3; }
          | expr '-' expr            { $$ = $1 - $3; }
          | expr '*' expr            { $$ = $1 * $3; }
@@ -600,7 +611,11 @@ void yyerror(char *s) {
 
 int main(int argc, char*argv[]) {
     signal(SIGINT, sighandler);
-    //sym=create_hash_table(tsize);
+    sym=create_hash_table(tsize);
+    if (sym == NULL) {
+        print_error("Could not allocate memory for symbol table.");
+        exit(1);
+    }
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (yyin == NULL) {
