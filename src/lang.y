@@ -46,6 +46,8 @@
     int pipes[2];
     int history_pipes[2];
 
+	Node *interpret( Node * );
+
     static void readline_sigint_handler();
     static void sighandler(int signo);
     char * substring(char *str, int b1, int b2, int step);
