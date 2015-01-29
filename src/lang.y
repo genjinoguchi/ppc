@@ -1391,35 +1391,17 @@ void free_node( Node * node)
 			 * Not sure if setting arrays to variables is done yet.
 			 */
 			free(node->var.varname);
-<<<<<<< HEAD
-			break;
-		case typeIAryOpr: 
-		case typeSAry:
-			i=0;
-			while(node->con.saryvalue[i]) 
-			for( i=0; i<node->con.sarycount; i++ ){
-=======
 		case typeIAryOpr:
 		case typeSAry:
 		    i = 0;
 			while (node->con.saryvalue[i]) {
->>>>>>> df845e68f2e5455d36d563fe306af02a19a7a6e9
 				free(node->con.saryvalue[i]);
 				++i;
 			}
             free(node->con.saryvalue[i]);
 			free(node->con.saryvalue);
-<<<<<<< HEAD
-		case typeSAryVar: 	
-			break;
-=======
 		case typeSAryVar:
-			/*
-			 * Lookup in the sym hash table?
-			 * Not sure if setting arrays to variables is done yet.
-			 */
 			 free(node->var.varname);
->>>>>>> df845e68f2e5455d36d563fe306af02a19a7a6e9
 		case typeSAryOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free(node->oper.operands[i]);
