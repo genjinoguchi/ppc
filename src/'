@@ -56,8 +56,8 @@
 	Node *nodify_str( char * );
 	Node *nodify_int( int );
 	Node *nodify_float( float );
-	Node *nodify_strary( char **, int );
-	Node *nodify_intary( int * );
+	Node *nodify_strary( char ** );
+	Node *nodify_intary( int ** );
 	Node *interpret( Node * );
 	void free_node( Node * );
 
@@ -1136,6 +1136,7 @@ void assign_int(char *var, int val) {
 }
 void assign_str(char *var, char *val) {
     int response = add(sym, var);
+		}
     if (response == 1) {
         print_error("Ran out of memory.");
     }
@@ -1167,7 +1168,7 @@ Node *nodify_var( int tokenType, char * varname )
 	int i;
 	Node * node;
 
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
 
@@ -1184,110 +1185,97 @@ Node *nodify_var( int tokenType, char * varname )
 		case FLOAT:
 			node->type=typeFloatVar;
 			break;
-		case STRING_ARRAY:
+		case STR_ARRAY:
 			node->type=typeSAryVar;
 			break;
 		case INT_ARRAY:
 			node->type=typeIAryVar;
 			break;
-	}
 	node->var.varname=varname;
 
 	return node;
 }
 
-Node *nodify_bool( char con )
+Node *nodify_bool( char const )
 {
-	Node *node;
+	Node node;
 
 	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
 
 	node->type=typeBool;
-	node->con.boolvalue = con;
+	node->const.boolvalue = const;
 
 	return node;
 }
 
-Node *nodify_str( char *con )
+Node *nodify_str( char *const )
 {
-	Node *node;
+	Node node;
 
 	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
 
 	node->type=typeStr;
-	node->con.strvalue = con;
+	node->const.strvalue = const;
 
 	return node;
 }
 
-Node *nodify_int( int con )
+Node *nodify_int( int const )
 {
-	Node *node;
+	Node node;
 
 	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
 
 	node->type=typeInt;
-	node->con.intvalue = con;
+	node->const.intvalue = const;
 
 	return node;
 }
 
-Node *nodify_float( float con )
+Node *nodify_float( int const )
 {
-	Node *node;
+	Node node;
 
 	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
 
 	node->type=typeFloat;
-	node->con.floatvalue = con;
+	node->const.floatvalue = const;
 
 	return node;
 }
 
-Node *nodify_strary( char ** con, int count )
+Node *nodify_strary( char ** const )
 {
-	Node *node;
+	Node node;
 
 	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+	if( node = (Node *)malloc(sizeof(Node))) == NULL ){
 		print_error("Ran out of memory");
 	}
-
-	/* String memory allocation */
-
 
 	node->type=typeSAry;
-	node->con.saryvalue = con;
-	node->con.sarycount = count;
+	node->const.boolvalue = const;
 
 	return node;
 }
 
-Node *nodify_intary( int * con )
+Node *nodify_intary( int ** const )
 {
-	Node *node;
 
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
 
-	node->type=typeIAry;
-	node->con.iaryvalue = con;
 
-	return node;
 }
 
 void free_node( Node * node)
@@ -1296,14 +1284,13 @@ void free_node( Node * node)
 
 	if( !node ) return;
 	switch( node->type ) {
-		case typeStr:
-			free(node->con.strvalue);
+			case typeStr:
+		free(Node->const.strvalue);
 			break;
 		case typeStrVar: 	
-			linked_list *res;
-			res = lookup(sym, node->var.varname);
+			linked_list *res = lookup(sym, Node->var.varname);
 /**/		free(res->s);
-			free(node->var.varname);
+			free(Node->var.varname);
 			break;
 		case typeStrOpr:  
 			/* 
@@ -1313,36 +1300,36 @@ void free_node( Node * node)
 			for( i=0; i<node->oper.numops; i++ ){
 				free_node(node->oper.operands[i]);
 			}
-			free(node->oper.operands);
+			free(oper.operands);
 		case typeIntVar:
-			free(node->var.varname);
+			free(Node->var.varname);
 			break;
 		case typeIntOpr:
 			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
+				free_node(node->oper.operands[i];
 			}
 			free(node->oper.operands);
 			break;
 		case typeFloatVar:
-			free(node->var.varname);
+			free(Node->var.varname);
 			break;
 		case typeFloatOpr:
 			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
+				free_node(node->oper.operands[i];
 			}
 			free(node->oper.operands);
 			break;
 		case typeBoolVar:
-			free(node->var.varname);
+			free(Node->var.varname);
 			break;
 		case typeBoolOpr: 
 			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
+				free_node(node->oper.operands[i];
 			}
 			free(node->oper.operands);
 			break;
 		case typeIAry:
-			free(node->con.iaryvalue);
+			free(node->const.iaryvalue);
 			break;
 		case typeIAryVar:
 			/*
@@ -1352,10 +1339,10 @@ void free_node( Node * node)
 			free(node->var.varname);
 		case typeIAryOpr: 
 		case typeSAry:
-			for( i=0; i<node->con.sarycount; i++ ){
-				free(node->con.saryvalue[i]);
+			for( i=0; i<node->const.sarycount; i++ ){
+				free(n->const.saryvalue[i]);
 			}
-			free(node->con.saryvalue);
+			free(node->const.saryvalue);
 		case typeSAryVar: 	
 			/*
 			 * Lookup in the sym hash table?

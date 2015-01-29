@@ -5,6 +5,9 @@ typedef enum {
 	typeInt,
 	typeIntVar,
 	typeIntOpr,
+	typeFloat,
+	typeFloatVar,
+	typeFloatOpr,
 	typeBool,
 	typeBoolVar,
 	typeBoolOpr,
@@ -17,29 +20,34 @@ typedef enum {
 } nodeType;
 
 typedef union {
-	char boolvalue,
-	int intvalue,
-	char * strvalue,
-	int * iaryvalue[],
-	char ** saryvalue[]
-} ntypeConst;
+	char boolvalue;
+	int intvalue;
+	float floatvalue;
+	char * strvalue;
+	int * iaryvalue;
+	struct {	
+		char ** saryvalue;
+		int sarycount;
+	};
+} ntypeCon;
 
 typedef union {
 	char * varname;
 } ntypeVar;
 
 typedef struct {
-	int operator,
-	int numops,
-	struct nodeTag ** operands
+	int returnToken;
+	int operator;
+	int numops;
+	struct nodeTag ** operands;
 } ntypeOper;
 
 typedef struct nodeTag {
-	nodeType type,
+	nodeType type;
 	
 	union {
-		ntypeConst const,
-		ntypeVar var,
-		ntypeOper oper
-	}
+		ntypeCon con;
+		ntypeVar var;
+		ntypeOper oper;
+	};
 } Node;

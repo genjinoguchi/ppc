@@ -2,7 +2,7 @@ DEBUG=-DDEBUG -g
 WARNINGS_QUIET=-Wall -Wno-unused-variable -Wno-unused-function
 WARNINGS_ALL=-Wall
 WARNINGS=$(WARNINGS_QUIET)
-C_FILES=lex.yy.c lang.tab.c utils.c hash.c
+C_FILES=lex.yy.c lang.tab.c utils.c hash.c interpreter.c
 LIBS=-lm -lreadline
 all:
 	@bison -d lang.y

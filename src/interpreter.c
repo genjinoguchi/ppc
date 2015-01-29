@@ -8,18 +8,25 @@ Node *interpret( Node * n )
 	if(!n) return 0;
 
 	switch ( n -> type ) {
-		case typeStr: return n->const.strvalue;
+		case typeStr:
 		case typeStrVar: 
 		case typeStrOpr: 
-		case typeInt: return n->const.intvalue;
+		case typeInt:
 		case typeIntVar: 
-		case typeIntOpr: 
-		case typeBool: return n->const.boolvalue;
+		case typeIntOpr:
+		case typeFloat:
+		case typeFloatVar:
+		case typeFloatOpr:
+		case typeBool:
 		case typeBoolVar: 
 		case typeBoolOpr: 
-		case typeIAry: return n->const.iaryvalue;
+		case typeIAry:
 		case typeIAryVar: 
 		case typeIAryOpr: 
-		case typeSAry: return n->const.saryvalue;
+		case typeSAry:
 		case typeSAryVar: 
-		case typeSAryOpr: 
+		case typeSAryOpr:
+		default:
+		break;
+	}
+}
