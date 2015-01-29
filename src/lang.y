@@ -56,7 +56,7 @@
 	Node *nodify_str( char * );
 	Node *nodify_int( int );
 	Node *nodify_float( float );
-	Node *nodify_strary( char **, int );
+	Node *nodify_strary( char ** );
 	Node *nodify_intary( int * );
 	Node *interpret( Node * );
 	void free_node( Node * );
@@ -1296,7 +1296,7 @@ Node *nodify_float( float con )
 	return node;
 }
 
-Node *nodify_strary( char ** con, int count )
+Node *nodify_strary( char ** con )
 {
 	Node *node;
 
@@ -1310,7 +1310,6 @@ Node *nodify_strary( char ** con, int count )
 
 	node->type=typeSAry;
 	node->con.saryvalue = con;
-	node->con.sarycount = count;
 
 	return node;
 }
@@ -1346,10 +1345,6 @@ void free_node( Node * node)
 			free(node->var.varname);
 			break;
 		case typeStrOpr:  
-			/* 
-			 * To address:
-			 * How would I be able to free the outcome of the string_opr?
-			 */
 			for( i=0; i<node->oper.numops; i++ ){
 				free_node(node->oper.operands[i]);
 			}
@@ -1390,23 +1385,23 @@ void free_node( Node * node)
 			 * Not sure if setting arrays to variables is done yet.
 			 */
 			free(node->var.varname);
+			break;
 		case typeIAryOpr: 
 		case typeSAry:
+			i=0;
+			while(node->con.saryvalue[i]) 
 			for( i=0; i<node->con.sarycount; i++ ){
 				free(node->con.saryvalue[i]);
 			}
 			free(node->con.saryvalue);
 		case typeSAryVar: 	
-			/*
-			 * Lookup in the sym hash table?
-			 * Not sure if setting arrays to variables is done yet.
-			 */
-			 free(node->var.varname);
+			break;
 		case typeSAryOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free(node->oper.operands[i]);
 			}
 			free(node->oper.operands);
+			break;
 	}
 }
 
