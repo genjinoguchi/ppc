@@ -27,7 +27,7 @@
 
     #include "utils.h"
     #include "hash.h"
-	#include "node.h"
+    #include "node.h"
 
     #define INPUT_BUF_SIZE 2048
     #define EOF_EXIT_CODE 10
@@ -48,18 +48,6 @@
     const char *prompt = ">> ";
     int pipes[2];
     int history_pipes[2];
-
-	/* Nodeification */
-	Node *nodify_oper( int, int, int, ...);
-	Node *nodify_var( int, char * );
-	Node *nodify_bool( char );
-	Node *nodify_str( char * );
-	Node *nodify_int( int );
-	Node *nodify_float( float );
-	Node *nodify_strary( char **, int );
-	Node *nodify_intary( int * );
-	Node *interpret( Node * );
-	void free_node( Node * );
 
     static void readline_sigint_handler();
     static void sighandler(int signo);
@@ -277,7 +265,14 @@ expr:
             $$=res->i;
             free($1);
                                     }
-         | expr '+' expr            { $$ = $1 + $3; }
+         | expr '+' expr            {
+
+                                Node *o1 = nodify_int($1);
+                                Node *o2 = nodify_int($3);
+                                Node *n = nodify_oper(INTEGER, '+', 2, o1, o2);
+                                return interpret(n)->con.intvalue;
+
+                                    }
          | bool_expr '+' expr       { $$ = $1 + $3; }
          | expr '+' bool_expr       { $$ = $1 + $3; }
          | bool_expr '+' bool_expr  { $$ = $1 + $3; }
@@ -1155,268 +1150,5 @@ void assign_str(char *var, char *val) {
     free(val);
 }
 
-/* Nodification Operations */
-
-Node *nodify_oper( int tokenType, int operator, int numops, ... )
-{
-	va_list marker;
-	Node *node;
-	int i;
-
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-	if(( node->oper.operands = (Node **)malloc(numops * sizeof(Node *))) == NULL) {
-		print_error("Ran out of memory");
-	}
-
-	switch( tokenType ){
-		case BOOLEAN:
-			node->type=typeBoolOpr;
-			break;
-		case STRING:
-			node->type=typeStrOpr;
-			break;
-		case INTEGER:
-			node->type=typeIntOpr;
-			break;
-		case FLOAT:
-			node->type=typeFloatOpr;
-			break;
-		case STRING_ARRAY:
-			node->type=typeSAryOpr;
-			break;
-		case INT_ARRAY:
-			node->type=typeIAryOpr;
-			break;
-	}
-	node->oper.returnToken = tokenType;
-	node->oper.operator = operator;
-	node->oper.numops = numops;
-	va_start(marker, numops);
-	for( i=0; i<numops; i++ ){
-		node->oper.operands[i] = va_arg(marker, Node *);
-	}
-	va_end(marker);
-
-	return node;
-}
-
-Node *nodify_var( int tokenType, char * varname )
-{
-	int i;
-	Node * node;
-
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	switch( tokenType ){
-		case BOOLEAN:
-			node->type=typeBoolVar;
-			break;
-		case STRING:
-			node->type=typeStrVar;
-			break;
-		case INTEGER:
-			node->type=typeIntVar;
-			break;
-		case FLOAT:
-			node->type=typeFloatVar;
-			break;
-		case STRING_ARRAY:
-			node->type=typeSAryVar;
-			break;
-		case INT_ARRAY:
-			node->type=typeIAryVar;
-			break;
-	}
-	node->var.varname=varname;
-
-	return node;
-}
-
-Node *nodify_bool( char con )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	node->type=typeBool;
-	node->con.boolvalue = con;
-
-	return node;
-}
-
-Node *nodify_str( char *con )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	node->type=typeStr;
-	node->con.strvalue = con;
-
-	return node;
-}
-
-Node *nodify_int( int con )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	node->type=typeInt;
-	node->con.intvalue = con;
-
-	return node;
-}
-
-Node *nodify_float( float con )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	node->type=typeFloat;
-	node->con.floatvalue = con;
-
-	return node;
-}
-
-Node *nodify_strary( char ** con, int count )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	/* String memory allocation */
-
-
-	node->type=typeSAry;
-	node->con.saryvalue = con;
-
-	return node;
-}
-
-Node *nodify_intary( int * con )
-{
-	Node *node;
-
-	/* Node memory allocation */
-	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
-		print_error("Ran out of memory");
-	}
-
-	node->type=typeIAry;
-	node->con.iaryvalue = con;
-
-	return node;
-}
-
-void free_node( Node * node)
-{
-	int i;
-	linked_list *res;
-
-	if( !node ) return;
-	switch( node->type ) {
-		case typeStr:
-			free(node->con.strvalue);
-			break;
-		case typeStrVar:
-			res = lookup(sym, node->var.varname);
-/**/		free(res->s);
-			free(node->var.varname);
-			break;
-		case typeStrOpr:
-			/*
-			 * To address:
-			 * How would I be able to free the outcome of the string_opr?
-			 */
-			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
-			}
-			free(node->oper.operands);
-		case typeInt:
-		    break;
-		case typeIntVar:
-			free(node->var.varname);
-			break;
-		case typeIntOpr:
-			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
-			}
-			free(node->oper.operands);
-			break;
-		case typeFloat:
-		    break;
-		case typeFloatVar:
-			free(node->var.varname);
-			break;
-		case typeFloatOpr:
-			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
-			}
-			free(node->oper.operands);
-			break;
-		case typeBool:
-		    break;
-		case typeBoolVar:
-			free(node->var.varname);
-			break;
-		case typeBoolOpr:
-			for( i=0; i<node->oper.numops; i++ ){
-				free_node(node->oper.operands[i]);
-			}
-			free(node->oper.operands);
-			break;
-		case typeIAry:
-			free(node->con.iaryvalue);
-			break;
-		case typeIAryVar:
-			/*
-			 * Lookup in the sym hash table?
-			 * Not sure if setting arrays to variables is done yet.
-			 */
-			free(node->var.varname);
-		case typeIAryOpr:
-		case typeSAry:
-		    i = 0;
-			while (node->con.saryvalue[i]) {
-				free(node->con.saryvalue[i]);
-				++i;
-			}
-            free(node->con.saryvalue[i]);
-			free(node->con.saryvalue);
-		case typeSAryVar:
-			/*
-			 * Lookup in the sym hash table?
-			 * Not sure if setting arrays to variables is done yet.
-			 */
-			 free(node->var.varname);
-		case typeSAryOpr:
-			for( i=0; i<node->oper.numops; i++ ){
-				free(node->oper.operands[i]);
-			}
-			free(node->oper.operands);
-	}
-}
-
-
     /* ============= END SUBROUTINES ============= */
+// vim: ts=4, et, sts, sw=4, sr
