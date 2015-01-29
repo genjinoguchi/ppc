@@ -8,8 +8,9 @@ C-Script
 ## About
 This project was written as a final project for the Fall 2014 Systems Level Programming class (4th period) at Stuyvesant High School
 ##Building the Project
-1. Install the GNU Readline Library  
-2. Run `$ make`  
+1. Make sure you have the Bison Parser Generator and the Flex Lexical Analyzer installed on your computer  
+2. Install the GNU Readline Library  
+3. Run `$ make`  
 
 ##Running the Project
 1. Run `$ ./lang <file>` or alternatively `$ ./lang` for an interactive shell  
@@ -30,15 +31,17 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 
 ####Integer Arrays
 * Array get element at index `{1, 3, 4}[2]`
-* Array-array concatenation `{1, 2, 3} + {4, 5, 6}`
 * Array-element concatenation `{1, 2, 3} + 4 + 5 + 6`
 * Array-element subtraction `{1, 2, 3} - 3 - 2 - 1`
+* Array-array concatenation `{1, 2, 3} + {4, 5, 6}`
 * Array multiplication `{1, 2, 3} * 100`
 * Array length `#({1, 2, 3} * 100)`
 
 ####String Arrays
 * Array get element at index `{"Hello", "World"}[1]`
 * Array-element concatenation `{"Welcome", "To", "My"} + "Home" + "Stranger"`
+* Array-array concatenation `{"World"} + {"All", "Cow", "Data", "Oink"} + "Pig"`
+* Array multiplication `3 * {"hello"} + "world"`
 * Array length `#{"Hello", "World!"}`
 * Result of string division `#"Mary had a little lamb" / "little"`
 
@@ -58,8 +61,7 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 
 ####Variables
 * Storing integer values in variables `thisIsAVariable = 9`
-
-##
+* Storing string values in variables `thisIsAVariable = "Tro" + 100 * "lo"`
 
 ##File List
 src/lang.lex  
@@ -69,6 +71,7 @@ src/utils.h
 src/hash.c  
 src/hash.h  
 src/Makefile  
+tests/tests.gcz  
 LICENSE  
 README.md  
 TODO.md  

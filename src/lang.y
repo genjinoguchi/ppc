@@ -1,12 +1,14 @@
     /* =============== DEFINITIONS ============= */
-%token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY STRING_ARRAY
-%token IF ENDIF ELSE WHILE GTE LTE EQL NEQ AND OR
+%token BOOLEAN INTEGER FLOAT STRING INT_ARRAY STRING_ARRAY
+%token VARIABLE INT_VARIABLE STR_VARIABLE
+%token IF ENDIF ELSE WHILE GT LT GTE LTE EQL NEQ AND OR
     /* Left-associative operator precedence */
-%left '+' '-'
-%right '%' '#'
 %left AND OR
 %left EQL NEQ
+%left GT LT
 %left GTE LTE
+%left '+' '-'
+%left '%' '#'
 %left '*' '/' '<' '>' '|' '^'
 %left '(' ')' '[' ']' '{' '}'
     /* Right-associative operator precedence */
@@ -37,8 +39,8 @@
     extern FILE * yyin;
     extern int yylineno;
 
-    int tsize = 50;
-    hash_table_t *sym;
+    int table_size = 50;
+    hash_table *sym;
 
     char keep_alive = 1;
     char input[INPUT_BUF_SIZE];
@@ -47,13 +49,26 @@
     int pipes[2];
     int history_pipes[2];
 
-	
+	/* Nodeification */
+	Node *nodify_oper( int, int, int, ...);
+	Node *nodify_var( char * );
+	Node *nodify_bool( char );
+	Node *nodify_str( char * );
+	Node *nodify_int( int );
+	Node *nodify_strary( char ** );
+	Node *nodify_intary( int ** );
 	Node *interpret( Node * );
+	void free_node( Node * );
 
     static void readline_sigint_handler();
     static void sighandler(int signo);
     char * substring(char *str, int b1, int b2, int step);
+    void assign_int(char *var, int val);
+    void assign_str(char *var, char *val);
 
+    #ifdef DEBUG
+    #define YYDEBUG 1
+    #endif
 %}
 
 %union {
@@ -71,10 +86,12 @@
 %type <strval> STRING
 %type <strval> str_expr
 %type <varval> VARIABLE
+%type <varval> INT_VARIABLE
+%type <varval> STR_VARIABLE
 %type <str_arrayval> STRING_ARRAY
 %type <str_arrayval> str_array_expr
-%type <intval> expr
 %type <intval> INTEGER
+%type <intval> expr
 %type <int_arrayval> INT_ARRAY
 %type <int_arrayval> int_array_expr
 %type <floatval> FLOAT
@@ -118,22 +135,13 @@ statement:
                                     printf("}\n");
                                     free($1);
                                 }
-         | VARIABLE '=' expr    {
-
-            int response = add(sym, $1);
-            if (response == 1) {
-                print_error("Ran out of memory.");
-            }
-            list_t *res = lookup(sym, $1);
-            #ifdef DEBUG
-            if (res == NULL) {
-                print_debug("Something went wrong in the hash table lookup");
-            }
-            #endif
-            res->i = $3;
-            free($1);
-
-                                }
+         | VARIABLE                     {
+            print_error("Variable has not been initialized.");
+                                        }
+         | VARIABLE '=' expr            { assign_int($1, $3); }
+         | INT_VARIABLE '=' expr        { assign_int($1, $3); }
+         | VARIABLE '=' str_expr        { assign_str($1, $3); }
+         | STR_VARIABLE '=' str_expr    { assign_str($1, $3); }
          ;
 
 bool_expr:
@@ -146,10 +154,10 @@ bool_expr:
          | bool_expr EQL expr           { $$ = $1 == $3; }
          | bool_expr NEQ bool_expr      { $$ = $1 != $3; }
          | bool_expr NEQ expr           { $$ = $1 != $3; }
-         | bool_expr '>' bool_expr      { $$ = $1 > $3; }
-         | bool_expr '>' expr           { $$ = $1 > $3; }
-         | bool_expr '<' bool_expr      { $$ = $1 < $3; }
-         | bool_expr '<' expr           { $$ = $1 < $3; }
+         | bool_expr GT bool_expr       { $$ = $1 > $3; }
+         | bool_expr GT expr            { $$ = $1 > $3; }
+         | bool_expr LT bool_expr       { $$ = $1 < $3; }
+         | bool_expr LT expr            { $$ = $1 < $3; }
          | bool_expr GTE bool_expr      { $$ = $1 >= $3; }
          | bool_expr GTE expr           { $$ = $1 >= $3; }
          | bool_expr LTE bool_expr      { $$ = $1 <= $3; }
@@ -164,12 +172,12 @@ bool_expr:
          | expr NEQ bool_expr           { $$ = $1 != $3; }
          | expr NEQ expr                { $$ = $1 != $3; }
          | expr NEQ float_expr          { $$ = $1 != $3; }
-         | expr '>' expr                { $$ = $1 > $3; }
-         | expr '>' bool_expr           { $$ = $1 > $3; }
-         | expr '>' float_expr          { $$ = $1 > $3; }
-         | expr '<' expr                { $$ = $1 < $3; }
-         | expr '<' bool_expr           { $$ = $1 < $3; }
-         | expr '<' float_expr          { $$ = $1 < $3; }
+         | expr GT expr                 { $$ = $1 > $3; }
+         | expr GT bool_expr            { $$ = $1 > $3; }
+         | expr GT float_expr           { $$ = $1 > $3; }
+         | expr LT expr                 { $$ = $1 < $3; }
+         | expr LT bool_expr            { $$ = $1 < $3; }
+         | expr LT float_expr           { $$ = $1 < $3; }
          | expr GTE expr                { $$ = $1 >= $3; }
          | expr GTE bool_expr           { $$ = $1 >= $3; }
          | expr GTE float_expr          { $$ = $1 >= $3; }
@@ -180,10 +188,10 @@ bool_expr:
          | float_expr EQL expr          { $$ = $1 == $3; }
          | float_expr NEQ float_expr    { $$ = $1 != $3; }
          | float_expr NEQ expr          { $$ = $1 != $3; }
-         | float_expr '>' float_expr    { $$ = $1 > $3; }
-         | float_expr '>' expr          { $$ = $1 > $3; }
-         | float_expr '<' float_expr    { $$ = $1 < $3; }
-         | float_expr '<' expr          { $$ = $1 < $3; }
+         | float_expr GT float_expr     { $$ = $1 > $3; }
+         | float_expr GT expr           { $$ = $1 > $3; }
+         | float_expr LT float_expr     { $$ = $1 < $3; }
+         | float_expr LT expr           { $$ = $1 < $3; }
          | float_expr GTE float_expr    { $$ = $1 >= $3; }
          | float_expr GTE expr          { $$ = $1 >= $3; }
          | float_expr LTE float_expr    { $$ = $1 >= $3; }
@@ -212,7 +220,7 @@ bool_expr:
             free($3);
 
                                         }
-         | str_expr '>' str_expr        {
+         | str_expr GT str_expr         {
 
             if(strcmp($1, $3)>0){
                 $$ = 1;
@@ -224,7 +232,7 @@ bool_expr:
             free($3);
 
                                         }
-         | str_expr '<' str_expr        {
+         | str_expr LT str_expr         {
 
             if(strcmp($3, $1)>0){
                 $$ = 1;
@@ -262,16 +270,10 @@ bool_expr:
 
 expr:
            INTEGER                  { $$ = $1; }
-         | VARIABLE                 {
+         | INT_VARIABLE             {
 
-            list_t *res = lookup(sym, $1);
-            if (res == NULL) {
-                print_error("Variable has not been initialized.");
-                $$ = 0;
-            }
-            else {
-                $$=res->i;
-            }
+            linked_list *res = lookup(sym, $1);
+            $$=res->i;
             free($1);
                                     }
          | expr '+' expr            { $$ = $1 + $3; }
@@ -343,6 +345,12 @@ expr:
          ;
 str_expr:
            STRING                   { $$ = $1; }
+         | STR_VARIABLE             {
+
+            linked_list *res = lookup(sym, $1);
+            $$ = strdup(res->s);
+            free($1);
+                                    }
          | str_expr '+' str_expr    {
 
             char *s = (char *) malloc(sizeof(char) *
@@ -684,7 +692,7 @@ int_array_expr:
         }
 
                                                     }
-              | int_array_expr '*' expr   {
+              | int_array_expr '*' expr             {
 
         if ($3 >= 0) {
             int *i = (int *) malloc(sizeof(int) * (($1[0] - 1) * $3 + 1));
@@ -710,6 +718,35 @@ int_array_expr:
         else {
             print_error("Cannot multiply array by negative integer.");
             $$ = $1;
+        }
+
+                                                    }
+              | expr '*' int_array_expr             {
+
+        if ($1 >= 0) {
+            int *i = (int *) malloc(sizeof(int) * (($3[0] - 1) * $1 + 1));
+            if (i != NULL) {
+                int mult = 0;
+                int p = 0;
+                i[0] = ($3[0] - 1) * $1 + 1;
+                printf("New array of size %d\n", i[0]);
+                while (++mult <= $1) {
+                    int q;
+                    for (q = 1;q < $3[0];++q) {
+                        i[++p] = $3[q];
+                    }
+                }
+                free($3);
+                $$ = i;
+            }
+            else {
+                print_error("Out of memory.");
+                $$ = $3;
+            }
+        }
+        else {
+            print_error("Cannot multiply array by negative integer.");
+            $$ = $3;
         }
 
                                                     }
@@ -746,7 +783,6 @@ str_array_expr:
               | str_array_expr '+' str_expr     {
 
                 int len = str_arrlen($1);
-                printf("Length: %d\n", len);
                 char **new_ptr = (char **) realloc($1, sizeof(char *) *
                     (len + 2));
                 if (new_ptr != NULL) {
@@ -762,6 +798,110 @@ str_array_expr:
                 }
 
                                                 }
+              | str_array_expr '+' str_array_expr       {
+
+                int len1 = str_arrlen($1);
+                int len2 = str_arrlen($3);
+                char **new_ptr = (char **) realloc($1, sizeof(char *) *
+                    (len1 + len2 + 1));
+                if (new_ptr != NULL) {
+                    $1 = new_ptr;
+                    int i = 0;
+                    while (i < len2) {
+                        $1[len1 + i] = $3[i];
+                        ++i;
+                    }
+                    $1[len1 + len2] = NULL;
+                    $$ = $1;
+                    free($3);
+                }
+                else {
+                    print_error("Out of memory.");
+                    $$ = $1;
+                    free($3);
+                }
+
+                                                        }
+              | str_array_expr '*' expr                 {
+
+                if ($3 > 1) {
+                    int len = str_arrlen($1);
+                    char **new_ptr = (char **) realloc($1, sizeof(char *) *
+                        (len * $3 + 1));
+                    if (new_ptr != NULL) {
+                        $1 = new_ptr;
+                        int mult = 0;
+                        int p = len;
+                        while (++mult < $3) {
+                            int i;
+                            for (i = 0;i < len;++i) {
+                                $1[p] = strdup($1[i]);
+                                ++p;
+                            }
+                        }
+                        $1[p] = NULL;
+                        $$ = $1;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $1;
+                    }
+                }
+                else if ($3 == 1) {
+                    $$ = $1;
+                }
+                else {
+                    char **new_ptr = (char **) realloc($1, sizeof(char *));
+                    if (new_ptr != NULL) {
+                        new_ptr[0] = NULL;
+                        $$ = new_ptr;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $1;
+                    }
+                }
+                                                        }
+              | expr '*' str_array_expr                 {
+
+                if ($1 > 1) {
+                    int len = str_arrlen($3);
+                    char **new_ptr = (char **) realloc($3, sizeof(char *) *
+                        (len * $1 + 1));
+                    if (new_ptr != NULL) {
+                        $3 = new_ptr;
+                        int mult = 0;
+                        int p = len;
+                        while (++mult < $1) {
+                            int i;
+                            for (i = 0;i < len;++i) {
+                                $3[p] = strdup($3[i]);
+                                ++p;
+                            }
+                        }
+                        $3[p] = NULL;
+                        $$ = $3;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $3;
+                    }
+                }
+                else if ($1 == 1) {
+                    $$ = $3;
+                }
+                else {
+                    char **new_ptr = (char **) realloc($3, sizeof(char *));
+                    if (new_ptr != NULL) {
+                        new_ptr[0] = NULL;
+                        $$ = new_ptr;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $3;
+                    }
+                }
+                                                        }
 %%
     /* ================ END RULES ================ */
 
@@ -869,7 +1009,7 @@ void yyerror(char *s) {
 
 int main(int argc, char*argv[]) {
     signal(SIGINT, sighandler);
-    sym = create_hash_table(tsize);
+    sym = create_hash_table(table_size);
     if (sym == NULL) {
         print_error("Could not allocate memory for symbol table.");
         exit(1);
@@ -978,4 +1118,41 @@ int main(int argc, char*argv[]) {
     }
     return 0;
 }
+void assign_int(char *var, int val) {
+    int response = add(sym, var);
+    if (response == 1) {
+        print_error("Ran out of memory.");
+    }
+    linked_list *res = lookup(sym, var);
+    #ifdef DEBUG
+    if (res == NULL) {
+        print_debug("Something went wrong in the hash table lookup");
+    }
+    #endif
+    res->i = val;
+    res->type = INTEGER_VALUE;
+    free(var);
+}
+void assign_str(char *var, char *val) {
+    int response = add(sym, var);
+    if (response == 1) {
+        print_error("Ran out of memory.");
+    }
+    linked_list *res = lookup(sym, var);
+    #ifdef DEBUG
+    if (res == NULL) {
+        print_debug("Something went wrong in the hash table lookup");
+    }
+    #endif
+    /* If reassigning, free the old value */
+    if (response == 2) {
+        free(res->s);
+    }
+    res->s = strdup(val);
+    res->type = STRING_VALUE;
+    free(var);
+    free(val);
+}
+
+
     /* ============= END SUBROUTINES ============= */

@@ -7,14 +7,18 @@
     #include <sys/types.h>
 
     #include "utils.h"
+    #include "hash.h"
     #include "lang.tab.h"
 
     #define ERRMSG_LENGTH 100
 
     void yyerror(char *);
+    extern hash_table *sym;
+
     int buf_resize(size_t);
     int int_buf_resize(size_t);
     int str_buf_resize(size_t);
+    void restore_initial_state();
     char *buf;
     size_t buf_size = 0;
     size_t buf_index = 0;
@@ -59,12 +63,14 @@ WHITESPACE          [ \t]
 "while"     return WHILE;
     /* ============================================*/
     /* ================ Comparators ===============*/
-">="        return GTE;
-"<="        return LTE;
-"=="        return EQL;
-"!="        return NEQ;
-"&&"        return AND;
-"||"        return OR;
+[^>]">"[^>=]    return GT;
+[^<]"<"[^<=]    return LT;
+">="            return GTE;
+"<="            return LTE;
+"=="            return EQL;
+"!="            return NEQ;
+"&&"            return AND;
+"||"            return OR;
     /* ============================================*/
     /* ================ Booleans ==================*/
 
@@ -165,7 +171,9 @@ WHITESPACE          [ \t]
         print_error("String not terminated: '%s'", buf);
         YY_FLUSH_BUFFER;
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
+        /* Reset string buffer */
+        buf_ready = 0;
     }
 
                     }
@@ -224,7 +232,7 @@ WHITESPACE          [ \t]
 
         print_error("Integer array not terminated.");
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
 
                         }
 <INT_ARRAY_STATE>,[ ]?          ;
@@ -238,6 +246,7 @@ WHITESPACE          [ \t]
     print_debug("Found string array start: %s", yytext);
     #endif
     yy_push_state(STRING_ARRAY_STATE);
+    str_buf_index = 0;
 
                             }
 <STRING_ARRAY_STATE>"\}"    {
@@ -268,7 +277,9 @@ WHITESPACE          [ \t]
         print_error("String array not terminated.");
         YY_FLUSH_BUFFER;
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
+        /* Reset string buffer */
+        buf_ready = 0;
 
                             }
 <STRING_ARRAY_STATE>,[ ]?   {
@@ -306,7 +317,25 @@ WHITESPACE          [ \t]
     #ifdef DEBUG
     print_debug("Got variable: %s", yytext);
     #endif
-    return VARIABLE;
+    linked_list *res = lookup(sym, yytext);
+    #ifdef DEBUG
+    if (res != NULL) {
+        print_debug("Got variable recall: %s", yytext);
+    }
+    #endif
+    if (res != NULL) {
+        switch (res->type) {
+            case INTEGER_VALUE:
+                return INT_VARIABLE;
+            case STRING_VALUE:
+                return STR_VARIABLE;
+            default:
+                return INT_VARIABLE;
+        }
+    }
+    else {
+        return VARIABLE;
+    }
 
                 }
     /* =========================================== */
@@ -397,5 +426,11 @@ int str_buf_resize(size_t size_change) {
         }
     }
     return 0;
+}
+void restore_initial_state() {
+    while (yy_top_state() != INITIAL) {
+        yy_pop_state();
+    }
+    yy_pop_state();
 }
     /* ============= END SUBROUTINES ============= */
