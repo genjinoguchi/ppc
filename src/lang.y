@@ -1199,7 +1199,7 @@ Node *nodify_oper( int tokenType, int operator, int numops, ... )
 	}
 	va_end(marker);
 
-	return node;			
+	return node;
 }
 
 Node *nodify_var( int tokenType, char * varname )
@@ -1339,16 +1339,18 @@ void free_node( Node * node)
 		case typeStr:
 			free(node->con.strvalue);
 			break;
-		case typeStrVar: 	
+		case typeStrVar:
 			res = lookup(sym, node->var.varname);
 /**/		free(res->s);
 			free(node->var.varname);
 			break;
-		case typeStrOpr:  
+		case typeStrOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free_node(node->oper.operands[i]);
 			}
 			free(node->oper.operands);
+		case typeInt:
+		    break;
 		case typeIntVar:
 			free(node->var.varname);
 			break;
@@ -1358,6 +1360,8 @@ void free_node( Node * node)
 			}
 			free(node->oper.operands);
 			break;
+		case typeFloat:
+		    break;
 		case typeFloatVar:
 			free(node->var.varname);
 			break;
@@ -1367,10 +1371,12 @@ void free_node( Node * node)
 			}
 			free(node->oper.operands);
 			break;
+		case typeBool:
+		    break;
 		case typeBoolVar:
 			free(node->var.varname);
 			break;
-		case typeBoolOpr: 
+		case typeBoolOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free_node(node->oper.operands[i]);
 			}
@@ -1385,17 +1391,35 @@ void free_node( Node * node)
 			 * Not sure if setting arrays to variables is done yet.
 			 */
 			free(node->var.varname);
+<<<<<<< HEAD
 			break;
 		case typeIAryOpr: 
 		case typeSAry:
 			i=0;
 			while(node->con.saryvalue[i]) 
 			for( i=0; i<node->con.sarycount; i++ ){
+=======
+		case typeIAryOpr:
+		case typeSAry:
+		    i = 0;
+			while (node->con.saryvalue[i]) {
+>>>>>>> df845e68f2e5455d36d563fe306af02a19a7a6e9
 				free(node->con.saryvalue[i]);
+				++i;
 			}
+            free(node->con.saryvalue[i]);
 			free(node->con.saryvalue);
+<<<<<<< HEAD
 		case typeSAryVar: 	
 			break;
+=======
+		case typeSAryVar:
+			/*
+			 * Lookup in the sym hash table?
+			 * Not sure if setting arrays to variables is done yet.
+			 */
+			 free(node->var.varname);
+>>>>>>> df845e68f2e5455d36d563fe306af02a19a7a6e9
 		case typeSAryOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free(node->oper.operands[i]);
