@@ -1159,7 +1159,47 @@ void assign_str(char *var, char *val) {
 
 Node *nodify_oper( int tokenType, int operator, int numops, ... )
 {
-	
+	va_list marker;
+	Node *node;
+	int i;
+
+	if(( node = (Node *)malloc(sizeof(Node))) == NULL ){
+		print_error("Ran out of memory");
+	}
+	if(( node->oper.operands = (Node **)malloc(numops * sizeof(Node *))) == NULL) {
+		print_error("Ran out of memory");
+	}
+
+	switch( tokenType ){
+		case BOOLEAN:
+			node->type=typeBoolOpr;
+			break;
+		case STRING:
+			node->type=typeStrOpr;
+			break;
+		case INTEGER:
+			node->type=typeIntOpr;
+			break;
+		case FLOAT:
+			node->type=typeFloatOpr;
+			break;
+		case STRING_ARRAY:
+			node->type=typeSAryOpr;
+			break;
+		case INT_ARRAY:
+			node->type=typeIAryOpr;
+			break;
+	}
+	node->oper.returnToken = tokenType;
+	node->oper.operator = operator;
+	node->oper.numops = numops;
+	va_start(marker, numops);
+	for( i=0; i<numops; i++ ){
+		node->oper.operands[i] = va_arg(marker, Node *);
+	}
+	va_end(marker);
+
+	return node;			
 }
 
 Node *nodify_var( int tokenType, char * varname )
@@ -1293,6 +1333,7 @@ Node *nodify_intary( int * con )
 void free_node( Node * node)
 {
 	int i;
+	linked_list *res;
 
 	if( !node ) return;
 	switch( node->type ) {
@@ -1300,7 +1341,6 @@ void free_node( Node * node)
 			free(node->con.strvalue);
 			break;
 		case typeStrVar: 	
-			linked_list *res;
 			res = lookup(sym, node->var.varname);
 /**/		free(res->s);
 			free(node->var.varname);
