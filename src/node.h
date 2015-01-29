@@ -25,10 +25,7 @@ typedef union {
 	float floatvalue;
 	char * strvalue;
 	int * iaryvalue;
-	struct {	
-		char ** saryvalue;
-		int sarycount;
-	};
+    char ** saryvalue;
 } ntypeCon;
 
 typedef union {
@@ -44,7 +41,7 @@ typedef struct {
 
 typedef struct nodeTag {
 	nodeType type;
-	
+
 	union {
 		ntypeCon con;
 		ntypeVar var;

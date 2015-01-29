@@ -1199,7 +1199,7 @@ Node *nodify_oper( int tokenType, int operator, int numops, ... )
 	}
 	va_end(marker);
 
-	return node;			
+	return node;
 }
 
 Node *nodify_var( int tokenType, char * varname )
@@ -1310,7 +1310,6 @@ Node *nodify_strary( char ** con, int count )
 
 	node->type=typeSAry;
 	node->con.saryvalue = con;
-	node->con.sarycount = count;
 
 	return node;
 }
@@ -1340,13 +1339,13 @@ void free_node( Node * node)
 		case typeStr:
 			free(node->con.strvalue);
 			break;
-		case typeStrVar: 	
+		case typeStrVar:
 			res = lookup(sym, node->var.varname);
 /**/		free(res->s);
 			free(node->var.varname);
 			break;
-		case typeStrOpr:  
-			/* 
+		case typeStrOpr:
+			/*
 			 * To address:
 			 * How would I be able to free the outcome of the string_opr?
 			 */
@@ -1354,6 +1353,8 @@ void free_node( Node * node)
 				free_node(node->oper.operands[i]);
 			}
 			free(node->oper.operands);
+		case typeInt:
+		    break;
 		case typeIntVar:
 			free(node->var.varname);
 			break;
@@ -1363,6 +1364,8 @@ void free_node( Node * node)
 			}
 			free(node->oper.operands);
 			break;
+		case typeFloat:
+		    break;
 		case typeFloatVar:
 			free(node->var.varname);
 			break;
@@ -1372,10 +1375,12 @@ void free_node( Node * node)
 			}
 			free(node->oper.operands);
 			break;
+		case typeBool:
+		    break;
 		case typeBoolVar:
 			free(node->var.varname);
 			break;
-		case typeBoolOpr: 
+		case typeBoolOpr:
 			for( i=0; i<node->oper.numops; i++ ){
 				free_node(node->oper.operands[i]);
 			}
@@ -1390,13 +1395,16 @@ void free_node( Node * node)
 			 * Not sure if setting arrays to variables is done yet.
 			 */
 			free(node->var.varname);
-		case typeIAryOpr: 
+		case typeIAryOpr:
 		case typeSAry:
-			for( i=0; i<node->con.sarycount; i++ ){
+		    i = 0;
+			while (node->con.saryvalue[i]) {
 				free(node->con.saryvalue[i]);
+				++i;
 			}
+            free(node->con.saryvalue[i]);
 			free(node->con.saryvalue);
-		case typeSAryVar: 	
+		case typeSAryVar:
 			/*
 			 * Lookup in the sym hash table?
 			 * Not sure if setting arrays to variables is done yet.
