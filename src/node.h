@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 typedef enum {
 	typeStr,
 	typeStrVar,
@@ -20,6 +17,7 @@ typedef enum {
 } nodeType;
 
 typedef union {
+	char boolvalue,
 	int intvalue,
 	char * strvalue,
 	int * iaryvalue[],

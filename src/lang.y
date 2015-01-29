@@ -25,6 +25,7 @@
 
     #include "utils.h"
     #include "hash.h"
+	#include "node.h"
 
     #define INPUT_BUF_SIZE 2048
     #define EOF_EXIT_CODE 10
@@ -46,6 +47,7 @@
     int pipes[2];
     int history_pipes[2];
 
+	
 	Node *interpret( Node * );
 
     static void readline_sigint_handler();
