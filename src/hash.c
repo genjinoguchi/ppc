@@ -105,3 +105,4 @@ void free_table(hash_table *hashtable) {
     free(hashtable->table);
     free(hashtable);
 }
+// vim: ts=4:et:sts:sw=4:sr

@@ -47,3 +47,4 @@ int str_arrlen(char **arr) {
     }
     return i;
 }
+// vim: ts=4:et:sts:sw=4:sr

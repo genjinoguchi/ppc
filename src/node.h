@@ -66,4 +66,4 @@ Node *nodify_intary(int *con);
 Node *interpret(Node *n);
 void free_node(Node *);
 
-// vim: ts=4, et, sts, sw=4, sr
+// vim: ts=4:et:sts:sw=4:sr

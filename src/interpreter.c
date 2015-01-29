@@ -82,4 +82,4 @@ Node *interpret_int(Node * n) {
     }
 }
 
-// vim: ts=4, et, sts, sw=4, sr
+// vim: ts=4:et:sts:sw=4:sr

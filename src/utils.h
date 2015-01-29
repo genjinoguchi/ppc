@@ -26,3 +26,4 @@ void print_errno(const char *message);
 int * intdup(const int *src, size_t len);
 char ** str_arrdup(char **src, size_t len);
 int str_arrlen(char **arr);
+// vim: ts=4:et:sts:sw=4:sr

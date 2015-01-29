@@ -26,3 +26,4 @@ linked_list *lookup(hash_table *hashtable, char *str);
 unsigned int hash(hash_table *hashtable, char *str);
 int add(hash_table *hashtable, char *str);
 void free_table(hash_table *hashtable);
+// vim: ts=4:et:sts:sw=4:sr

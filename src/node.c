@@ -261,4 +261,4 @@ void free_node( Node * node)
     }
 }
 
-// vim: ts=4, et, sts, sw=4, sr
+// vim: ts=4:et:sts:sw=4:sr

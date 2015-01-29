@@ -1151,4 +1151,4 @@ void assign_str(char *var, char *val) {
 }
 
     /* ============= END SUBROUTINES ============= */
-// vim: ts=4, et, sts, sw=4, sr
+// vim: ts=4:et:sts:sw=4:sr
